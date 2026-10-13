@@ -1,0 +1,74 @@
+# Compiled binaries and build outputs
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.bin
+build/bin/
+build/windows/installer/tmp/
+
+# Temporary and atomic export files
+*.tmp
+*.tmp-*
+.export-*.tmp
+temporary/
+scratch/
+*.bak
+*.orig
+
+# Office & Excel lock files
+~$*.xlsx
+~$*.xls
+~$*.csv
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Wails CLI temporary files
+package.json.md5
+frontend/package.json.md5
+
+# Node dependencies and build output
+node_modules/
+frontend/node_modules/
+frontend/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Go build artifacts, test binaries, and coverage
+*.test
+*.out
+vendor/
+coverage.txt
+coverage.html
+profile.out
+*.pprof
+
+# AI Agent & Assistant workspaces
+.agents/
+.gemini/
+
+# IDE and Editor settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# Operating System files
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/

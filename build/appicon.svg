@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Document Sheet Body -->
+  <path d="M 112 26
+           L 304 26
+           L 444 166
+           L 444 442
+           A 44 44 0 0 1 400 486
+           L 112 486
+           A 44 44 0 0 1 68 442
+           L 68 70
+           A 44 44 0 0 1 112 26
+           Z"
+        fill="#8749e8" />
+
+  <!-- Fold Flap (Darker Purple) -->
+  <path d="M 304 26
+           L 304 122
+           A 44 44 0 0 0 348 166
+           L 444 166
+           Z"
+        fill="#6333c1" />
+
+  <!-- Top PDF text line (header bar) -->
+  <rect x="144" y="136" width="128" height="32" rx="16" fill="#ffffff" />
+
+  <!-- Interactive Crop / Extraction Selection Area -->
+  <!-- Translucent Crop Overlay -->
+  <rect x="130" y="194" width="252" height="204" rx="8"
+        fill="#ffffff" fill-opacity="0.10" />
+
+  <!-- Crop Box Border -->
+  <rect x="130" y="194" width="252" height="204" rx="8"
+        fill="none" stroke="#ffffff" stroke-width="7" />
+
+  <!-- Corner Resize Handles (App-Parity Crop Handles) -->
+  <rect x="119" y="183" width="22" height="22" rx="4" fill="#ffffff" />
+  <rect x="371" y="183" width="22" height="22" rx="4" fill="#ffffff" />
+  <rect x="119" y="393" width="22" height="22" rx="4" fill="#ffffff" />
+  <rect x="371" y="393" width="22" height="22" rx="4" fill="#ffffff" />
+
+  <!-- Detected Text Bar (Inside Crop Area) -->
+  <rect x="152" y="214" width="208" height="24" rx="12" fill="#ffffff" />
+
+  <!-- Structured Table Grid (Extracted Data Representation) -->
+  <!-- Header Row (Solid White) -->
+  <rect x="152" y="252" width="98" height="30" rx="7" fill="#ffffff" />
+  <rect x="262" y="252" width="98" height="30" rx="7" fill="#ffffff" />
+
+  <!-- Data Row 1 (85% White) -->
+  <rect x="152" y="294" width="98" height="30" rx="7" fill="#ffffff" fill-opacity="0.85" />
+  <rect x="262" y="294" width="98" height="30" rx="7" fill="#ffffff" fill-opacity="0.85" />
+
+  <!-- Data Row 2 (65% White) -->
+  <rect x="152" y="336" width="98" height="30" rx="7" fill="#ffffff" fill-opacity="0.65" />
+  <rect x="262" y="336" width="98" height="30" rx="7" fill="#ffffff" fill-opacity="0.65" />
+
+  <!-- Bottom PDF text line outside crop (40% White) -->
+  <rect x="144" y="428" width="224" height="28" rx="14" fill="#ffffff" fill-opacity="0.40" />
+</svg>

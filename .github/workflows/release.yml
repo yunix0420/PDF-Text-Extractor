@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*'
+      - '[0-9]+.[0-9]+.[0-9]+*'
+      - '[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build Release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: pdf-text-extractor-windows-amd64
+          - os: ubuntu-latest
+            artifact_name: pdf-text-extractor-linux-amd64
+          - os: macos-latest
+            artifact_name: pdf-text-extractor-darwin-universal
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Linux Build Dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev pkg-config gcc libwebkit2gtk-4.1-dev
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Build Windows Executable
+        if: runner.os == 'Windows'
+        run: |
+          wails build -clean
+
+      - name: Package Windows Artifacts
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Copy-Item "build\bin\pdf-text-extractor.exe" -Destination "pdf-text-extractor-windows-amd64.exe"
+
+      - name: Build Linux Executable & AppImage
+        if: runner.os == 'Linux'
+        run: |
+          wails build -tags webkit2_41 -clean
+
+          # Setup AppDir structure
+          mkdir -p AppDir/usr/bin AppDir/usr/share/icons/hicolor/512x512/apps AppDir/usr/share/applications
+          cp build/bin/pdf-text-extractor AppDir/usr/bin/pdf-text-extractor
+          cp build/appicon.png AppDir/usr/share/icons/hicolor/512x512/apps/pdf-text-extractor.png
+          cp build/appicon.png AppDir/pdf-text-extractor.png
+
+          cat << 'EOF' > AppDir/pdf-text-extractor.desktop
+          [Desktop Entry]
+          Name=PDF Text Extractor
+          Exec=pdf-text-extractor
+          Icon=pdf-text-extractor
+          Type=Application
+          Categories=Utility;Office;
+          Comment=Cross-platform visual PDF text extractor to Excel and CSV
+          Terminal=false
+          EOF
+          cp AppDir/pdf-text-extractor.desktop AppDir/usr/share/applications/
+
+          cat << 'EOF' > AppDir/AppRun
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          export PATH="${HERE}/usr/bin:${PATH}"
+          cd "${HERE}/usr/bin"
+          exec "${HERE}/usr/bin/pdf-text-extractor" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+
+          # Package AppImage using appimagetool
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          ./appimagetool --appimage-extract
+          ARCH=x86_64 ./squashfs-root/AppRun AppDir pdf-text-extractor-linux-amd64.AppImage
+
+      - name: Build macOS Application & Disk Image (.dmg)
+        if: runner.os == 'macOS'
+        run: |
+          wails build -platform darwin/universal -clean
+
+          # Package Universal Drag-and-Drop .dmg with Applications shortcut
+          mkdir -p dmg_root
+          cp -R build/bin/*.app dmg_root/
+          ln -s /Applications dmg_root/Applications
+          hdiutil create -volname "PDF Text Extractor" -srcfolder dmg_root -ov -format UDZO pdf-text-extractor-macos-universal.dmg
+
+      - name: Upload Build Artifacts (Workflow Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            *.exe
+            *.AppImage
+            *.dmg
+          if-no-files-found: ignore
+
+      - name: Upload Release Assets (GitHub Releases)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            pdf-text-extractor-windows-amd64.exe
+            pdf-text-extractor-linux-amd64.AppImage
+            pdf-text-extractor-macos-universal.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

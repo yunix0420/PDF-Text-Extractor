@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>PDF Text Extractor</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="alternate icon" href="./favicon.ico" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+
+<body>
+  <div id="app">
+    <div class="app-layout no-pdf">
+      <!-- Sidebar Panel -->
+      <aside class="sidebar">
+        <header class="header">
+          <button id="btn-toggle-sidebar" class="btn-layout-pos" title="Move Menu to Right"
+            aria-label="Move Menu to Right">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+          <h1>PDF Text Extractor</h1>
+          <button id="btn-about" class="btn-help" title="About Application" aria-label="About Application">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </button>
+        </header>
+
+        <!-- PDF Input Drop Zone -->
+        <div class="form-group pdf-drop-zone">
+          <label for="pdf-path">Input PDF File</label>
+          <div style="font-size: 11px; color: #666; margin-bottom: 5px;">(Click Browse or drag & drop a PDF here)</div>
+          <div class="file-picker">
+            <input type="text" id="pdf-path" readonly placeholder="No file selected" />
+            <button id="btn-select-pdf">Browse</button>
+            <button id="btn-unload-pdf" class="btn-secondary" style="width: auto; padding: 6px 10px; display: none;"
+              title="Unload currently loaded PDF" aria-label="Unload PDF">Unload</button>
+          </div>
+        </div>
+
+        <!-- Controls requiring an active PDF -->
+        <div class="requires-pdf">
+          <div class="form-group">
+            <label for="excel-filename">Output Filename</label>
+            <div class="input-row">
+              <input type="text" id="excel-filename" placeholder="extracted_pdf_filename" style="flex: 1;" />
+              <select id="output-format" class="format-select">
+                <option value=".xlsx">.xlsx</option>
+                <option value=".csv">.csv</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="excel-folder">Destination Folder</label>
+            <div class="file-picker">
+              <input type="text" id="excel-folder" readonly placeholder="No folder selected" />
+              <button id="btn-select-folder">Browse</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="page-range">Pages to Extract <span
+                style="font-weight: normal; font-size: 11px; color: #666;">(e.g. 5-10, 12)</span></label>
+            <div class="input-row">
+              <input type="text" id="page-range" placeholder="All pages (e.g. 5-10, 12)" style="flex: 1;" />
+              <button id="btn-all-pages" class="btn-secondary" style="width: auto; padding: 5px 10px;"
+                title="Input all pages of the document">All</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="preset-selector">Saved Presets</label>
+            <div class="input-row">
+              <select id="preset-selector" style="flex: 1;">
+                <option value="">-- Select Preset --</option>
+              </select>
+              <button id="btn-delete-preset" class="btn-secondary"
+                style="width: auto; padding: 5px 10px;">Delete</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label style="margin-bottom: 0;">Crop Box Coordinates</label>
+              <button id="btn-toggle-crop-box" class="btn-toggle-box" title="Hide or show selection area on PDF"
+                aria-label="Toggle selection area">
+                <svg id="icon-eye-visible" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg id="icon-eye-hidden" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                  </path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+                <span id="text-toggle-crop-box">Hide Area</span>
+              </button>
+            </div>
+            <div class="input-row">
+              <input type="number" id="crop-left" placeholder="Left" />
+              <input type="number" id="crop-top" placeholder="Top" />
+              <input type="number" id="crop-right" placeholder="Right" />
+              <input type="number" id="crop-bottom" placeholder="Bottom" />
+            </div>
+            <div class="input-row" style="margin-top: 5px;">
+              <button id="btn-reset-coords" class="btn-secondary">Reset Coordinates</button>
+              <button id="btn-save-preset" class="btn-secondary">Save as Preset</button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label style="margin-bottom: 0;">Live Preview (Page <span id="preview-page-num">1</span>)</label>
+            </div>
+            <div id="live-preview-box" class="live-preview-box selectable-text empty">(No text detected in selected crop area)</div>
+          </div>
+
+          <button id="btn-extract">Start Extraction</button>
+          <div id="result-box" class="result"></div>
+        </div>
+      </aside>
+
+      <!-- Main Viewer Area -->
+      <main class="main-content">
+        <div id="pdf-placeholder" class="pdf-placeholder">
+          <span>No PDF loaded</span>
+        </div>
+
+        <div class="pdf-toolbar" id="pdf-toolbar" style="display: none;">
+          <div class="toolbar-row">
+            <!-- Page Navigation -->
+            <div class="toolbar-group">
+              <button id="btn-prev-page" title="Previous Page" aria-label="Previous Page">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="number" id="page-input" value="1" min="1" style="width: 45px;" />
+                <span class="toolbar-label">/ <span id="page-count" style="margin-left: 3px;">1</span></span>
+              </div>
+              <button id="btn-next-page" title="Next Page" aria-label="Next Page">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Zoom Controls -->
+            <div class="toolbar-group">
+              <button id="btn-zoom-out" title="Zoom Out (Ctrl + Scroll Down)" aria-label="Zoom Out">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="10" cy="10" r="7"></circle>
+                  <line x1="21" y1="21" x2="15" y2="15"></line>
+                  <line x1="7" y1="10" x2="13" y2="10"></line>
+                </svg>
+              </button>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="number" id="zoom-input" value="100" style="width: 48px;" />
+                <span class="toolbar-label">%</span>
+              </div>
+              <button id="btn-zoom-in" title="Zoom In (Ctrl + Scroll Up)" aria-label="Zoom In">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="10" cy="10" r="7"></circle>
+                  <line x1="21" y1="21" x2="15" y2="15"></line>
+                  <line x1="10" y1="7" x2="10" y2="13"></line>
+                  <line x1="7" y1="10" x2="13" y2="10"></line>
+                </svg>
+              </button>
+              <button id="btn-fit-page" class="btn-toolbar-text" title="Fit Page to Viewport"
+                aria-label="Fit Page">Fit</button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Toggle Crop Box Visibility -->
+            <div class="toolbar-group">
+              <button id="btn-toolbar-toggle-crop-box" title="Hide or show selection area (Ctrl + H)"
+                aria-label="Toggle selection area">
+                <svg id="tb-icon-eye-visible" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg id="tb-icon-eye-hidden" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  style="display: none;">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                  </path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Fullscreen Toggle -->
+            <div class="toolbar-group">
+              <button id="btn-fullscreen" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+                <svg id="fullscreen-icon-expand" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                  </path>
+                </svg>
+                <svg id="fullscreen-icon-compress" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  style="display: none;">
+                  <path
+                    d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3">
+                  </path>
+                </svg>
+              </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Unload PDF -->
+            <div class="toolbar-group">
+              <button id="btn-toolbar-unload" title="Unload PDF" aria-label="Unload PDF">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Area Selector -->
+        <div class="pdf-display-wrapper" id="pdf-display-wrapper" style="display: none;">
+          <div class="pdf-preview-area" id="pdf-preview-area">
+            <div id="canvas-container" style="position: relative; display: inline-block;">
+              <canvas id="pdf-canvas"></canvas>
+              <div id="crop-box" class="crop-box">
+                <div class="crop-handle crop-handle-tl" data-handle="tl" title="Resize Top-Left">
+                  <svg viewBox="0 0 14 14">
+                    <path d="M 7,7 L 7,14 A 7,7 0 1,1 14,7 Z" fill="#dc3545" />
+                  </svg>
+                </div>
+                <div class="crop-handle crop-handle-tr" data-handle="tr" title="Resize Top-Right">
+                  <svg viewBox="0 0 14 14">
+                    <path d="M 7,7 L 0,7 A 7,7 0 1,1 7,14 Z" fill="#dc3545" />
+                  </svg>
+                </div>
+                <div class="crop-handle crop-handle-bl" data-handle="bl" title="Resize Bottom-Left">
+                  <svg viewBox="0 0 14 14">
+                    <path d="M 7,7 L 14,7 A 7,7 0 1,1 7,0 Z" fill="#dc3545" />
+                  </svg>
+                </div>
+                <div class="crop-handle crop-handle-br" data-handle="br" title="Resize Bottom-Right">
+                  <svg viewBox="0 0 14 14">
+                    <path d="M 7,7 L 7,0 A 7,7 0 1,1 0,7 Z" fill="#dc3545" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Left-Anchored Vertical Page Scrubber -->
+          <div id="pdf-page-scrubber" class="pdf-page-scrubber" style="display: none;">
+            <div class="scrubber-track" id="scrubber-track">
+              <div class="scrubber-thumb" id="scrubber-thumb" role="slider" aria-label="Page Scrubber">
+                <span class="scrubber-thumb-handle"></span>
+              </div>
+              <div class="scrubber-badge" id="scrubber-badge">Page 1</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- About / Info Modal -->
+    <div id="about-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-dialog" style="width: 440px;">
+        <div class="modal-header">
+          <span class="modal-title">About PDF Text Extractor</span>
+          <button id="btn-close-about" class="btn-modal-close" title="Close" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body selectable-text">
+          <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+            <img src="./icon.svg" alt="PDF Text Extractor Icon" style="width: 48px; height: 48px;" />
+            <div>
+              <div style="font-size: 15px; font-weight: 600;">PDF Text Extractor</div>
+              <div style="font-size: 12px; color: #666;">Cross-platform visual PDF text extractor to Excel and CSV</div>
+            </div>
+          </div>
+          <table class="info-table">
+            <tbody id="about-table-body">
+              <!-- Dynamically populated from about.csv via refreshAboutModalContent() -->
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-ok-about" class="btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Desktop Confirmation Modal -->
+    <div id="confirm-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-dialog" style="width: 380px;">
+        <div class="modal-header">
+          <span id="confirm-modal-title" class="modal-title">Confirmation</span>
+          <button id="btn-confirm-modal-close" class="btn-modal-close" title="Close" aria-label="Close">✕</button>
+        </div>
+        <div id="confirm-modal-body" class="modal-body selectable-text">
+          Are you sure?
+        </div>
+        <div class="modal-footer">
+          <button id="btn-confirm-modal-cancel" class="btn-secondary">Cancel</button>
+          <button id="btn-confirm-modal-ok">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Desktop Prompt Modal -->
+    <div id="prompt-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-dialog" style="width: 380px;">
+        <div class="modal-header">
+          <span id="prompt-modal-title" class="modal-title">Enter Value</span>
+          <button id="btn-prompt-modal-close" class="btn-modal-close" title="Close" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <label id="prompt-modal-label" for="prompt-modal-input"
+            style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 12px; color: #495057;">Enter a
+            name:</label>
+          <input type="text" id="prompt-modal-input" placeholder="" style="width: 100%; box-sizing: border-box;" />
+        </div>
+        <div class="modal-footer">
+          <button id="btn-prompt-modal-cancel" class="btn-secondary">Cancel</button>
+          <button id="btn-prompt-modal-ok">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Desktop Error / Alert Modal -->
+    <div id="error-modal" class="modal-overlay" style="display: none; z-index: 100002;">
+      <div class="modal-dialog" style="width: 440px;">
+        <div class="modal-header">
+          <span id="error-modal-title" class="modal-title"
+            style="color: #dc3545; display: flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Application Error
+          </span>
+          <button id="btn-error-modal-close" class="btn-modal-close" title="Close" aria-label="Close">✕</button>
+        </div>
+        <div id="error-modal-body" class="modal-body selectable-text"
+          style="white-space: pre-wrap; word-break: break-word;">
+          An unexpected error occurred.
+        </div>
+        <div class="modal-footer">
+          <button id="btn-error-modal-ok" class="btn-secondary">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document Loading Modal -->
+    <div id="loading-modal" class="modal-overlay" style="display: none; z-index: 100001;">
+      <div class="modal-dialog" style="width: 320px; text-align: center;">
+        <div class="modal-body"
+          style="padding: 24px 16px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+          <div class="spinner"></div>
+          <div id="loading-modal-title" style="font-weight: 700; font-size: 13px; color: #212529;">Loading PDF
+            Document...</div>
+          <div id="loading-modal-message" style="font-size: 11px; color: #6c757d;">Reading document pages and structure
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extraction Progress Modal with Cancel -->
+    <div id="extract-progress-modal" class="modal-overlay" style="display: none; z-index: 100001;">
+      <div class="modal-dialog" style="width: 420px;">
+        <div class="modal-header">
+          <span id="extract-progress-title" class="modal-title">Extracting Text from PDF</span>
+        </div>
+        <div class="modal-body">
+          <div id="extract-progress-status" style="font-weight: 600; font-size: 12px; margin-bottom: 8px;">Preparing
+            extraction...</div>
+          <div class="progress-bar-track" style="margin-bottom: 6px;">
+            <div id="extract-progress-fill" class="progress-bar-fill"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6c757d;">
+            <span id="extract-progress-pages">Page 0 / 0</span>
+            <span id="extract-progress-percent">0%</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-extract-cancel" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./src/main.js" type="module"></script>
+</body>
+
+</html>
